@@ -18,7 +18,7 @@ func DataSender(data []byte) (string,error){
 	// ,conf.Server_ip+":"+string(conf.Server_port))
 	conn,err := net.Dial("tcp",address)
 	if err != nil {
-		return "连接失败",err
+		return "connect error:",err
 	}
 	zbxHeader := []byte("ZBXD\x01")
 	zbxHeaderLength := len(zbxHeader)+8
@@ -31,8 +31,8 @@ func DataSender(data []byte) (string,error){
 	msgArray = append(msgArray, data...)
 	_,err = conn.Write(msgArray)
 	if err != nil {
-		log.Println("发送数据失败",err)
-		return "发送数据失败",err
+		log.Println("send data error:",err)
+		return "send data error:",err
 	}
 	defer func(){
 		err = conn.Close()
@@ -47,30 +47,16 @@ func DataSender(data []byte) (string,error){
 		return "error data",err
 	}
 	if string(buf.Bytes()[:5]) != "ZBXD\x01" {
-		log.Println("zabbix server: 无效响应数据头",err)
-		return "zabbix server: 无效响应数据头",err
+		log.Println("zabbix server:Invalid data header",err)
+		return "zabbix server:Invalid data header",err
 	}
 	return string(buf.Bytes())[13:],nil
-	/* 方法一：这个方法有问题
-	buf := make([]byte, 0, 4096)
-	dataLen := 0
-	for {
-		n, err := conn.Read(buf[dataLen:])
-		if n > 0 {
-			dataLen += n
-		}
-		if err != nil {
-			if err != io.EOF {
-				fmt.Println("数据接收完毕")
-			}
-			break
-		}
-	}*/
 
-	/* 方法三：使用ioutil.ReadALL
+
+	/* used: ioutil.ReadALL
 	response, err := ioutil.ReadAll(conn)
 	if string(response[:5]) != "ZBXD\x01" {
-		return "zabbix server: 无效响应数据头",err
+		return "zabbix server:Invalid data header",err
 	}
 	return string(response)[13:],nil
 	 */
